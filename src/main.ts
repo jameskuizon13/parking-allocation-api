@@ -13,7 +13,7 @@ async function bootstrap() {
     .setTitle('Parking Allocation System')
     .setDescription('A parking allocation system for Object-oriented Mall')
     .setVersion('1.0')
-    .addTag('parking-allocation')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
