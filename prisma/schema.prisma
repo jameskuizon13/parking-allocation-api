@@ -9,3 +9,88 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model ParkingEntrance {
+  id String @id @default(uuid())
+  name String @unique
+  entranceToSlot EntranceToParkingSlot[]
+
+  @@map("parking_entrances")
+}
+
+model ParkingSlot {
+  id String @id @default(uuid())
+  name String
+  isOccupied Boolean @default(false) @map("is_occupied")
+
+  entranceToParkingSlots EntranceToParkingSlot[]
+
+  parkingSlotType ParkingSlotType @relation(fields: [parkingSlotTypeId], references: [id])
+  parkingSlotTypeId String @map("parking_slot_type_id")
+
+  parkingRecords ParkingRecord[]
+
+  @@map("parking_slots")
+}
+
+model EntranceToParkingSlot {
+  id String @id @default(uuid())
+  distance Int @default(0)
+
+  parkingSlot ParkingSlot @relation(fields: [parkingSlotId], references: [id])
+  parkingSlotId String @map("parking_slot_id")
+
+  parkingEntrance ParkingEntrance @relation(fields: [parkingEntranceId], references: [id])
+  parkingEntranceId String @map("parking_entrance_id")
+
+  @@map("entrance_to_parking_slots")
+}
+
+model ParkingSlotType {
+  id String @id @default(uuid())
+  type ParkingType
+  price Float @default(0)
+
+  parkingSlots ParkingSlot[]
+
+  @@map("parking_slot_types")
+}
+
+
+model ParkingRecord {
+  id String @id @default(uuid())
+  timeIn DateTime @default(now()) @map("time_in")
+  timeOut DateTime? @map("time_out")
+  amountDue Float @default(0) @map("amount_due")
+
+  parkingSlot ParkingSlot @relation(fields: [parkingSlotId], references: [id])
+  parkingSlotId String @map("parking_slot_id")
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId String @map("vehicle_id")
+
+  @@map("parking_records")
+}
+
+model Vehicle {
+  id String @id @default(uuid())
+  plateNumber String @map("plate_number")
+  vehicleType VehicleType @map("vehicle_type")
+
+  parkingRecords ParkingRecord[]
+
+  @@map("vehicles")
+}
+
+enum VehicleType {
+  S
+  M
+  L
+}
+
+enum ParkingType {
+  SP
+  MP
+  LP
+}
+
