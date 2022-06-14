@@ -5,6 +5,7 @@ import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
 import { ParkingEntranceModule } from './parking-entrance/parking-entrance.module';
 import { ParkingSlotModule } from './parking-slot/parking-slot.module';
+import { ParkingSlotTypeModule } from './parking-slot-type/parking-slot-type.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ParkingSlotModule } from './parking-slot/parking-slot.module';
     UserModule,
     ParkingEntranceModule,
     ParkingSlotModule,
+    ParkingSlotTypeModule,
   ],
 })
 export class AppModule {}
