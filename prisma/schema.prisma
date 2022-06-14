@@ -20,7 +20,7 @@ model ParkingEntrance {
 
 model ParkingSlot {
   id String @id @default(uuid())
-  name String
+  name String @unique
   isOccupied Boolean @default(false) @map("is_occupied")
 
   entranceToParkingSlots EntranceToParkingSlot[]
