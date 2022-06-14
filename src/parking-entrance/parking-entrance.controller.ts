@@ -22,7 +22,7 @@ export class ParkingEntranceController {
 
   @Get()
   fetchAll() {
-    return this.parkingEntranceService.fetchAllEntrances();
+    return this.parkingEntranceService.fetchAll();
   }
 
   @Post()

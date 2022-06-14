@@ -6,7 +6,7 @@ import { ParkingEntranceDto } from './dto';
 export class ParkingEntranceService {
   constructor(private databaseService: DatabaseService) {}
 
-  fetchAllEntrances() {
+  fetchAll() {
     return this.databaseService.parkingEntrance.findMany();
   }
 
