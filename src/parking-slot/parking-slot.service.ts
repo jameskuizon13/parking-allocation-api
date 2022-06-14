@@ -1,11 +1,30 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { DatabaseService } from '../database/database.service';
-import { ParkingSlotDto } from './dto';
+import { FetchParkingSlotDto, ParkingSlotDto } from './dto';
 
 @Injectable({})
 export class ParkingSlotService {
   constructor(private databaseService: DatabaseService) {}
+
+  fetchAll(query: FetchParkingSlotDto) {
+    if (query.parkingType) {
+      query['parkingSlotType'] = { type: query.parkingType };
+      delete query.parkingType;
+    }
+
+    /** Sample where statement if both isOccupied and parkingType is present
+     *  {
+     *      isOccupied: false,
+     *      parkingSlotType: {
+     *          type: 'SP'
+     *      }
+     *  }
+     * */
+    return this.databaseService.parkingSlot.findMany({
+      where: query,
+    });
+  }
 
   async addParkingSlot(dto: ParkingSlotDto) {
     try {

@@ -16,5 +16,5 @@ export class ParkingSlotDto {
 
   @IsOptional()
   @Type(() => PositionDto)
-  positions: PositionDto[];
+  positions?: PositionDto[];
 }

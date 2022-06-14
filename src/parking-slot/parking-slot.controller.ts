@@ -1,15 +1,20 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../auth/guard';
-import { ParkingSlotDto } from './dto';
+import { FetchParkingSlotDto, ParkingSlotDto } from './dto';
 import { ParkingSlotService } from './parking-slot.service';
 
 @ApiBearerAuth()
-@ApiTags('parking-slot')
+@ApiTags('parking-slots')
 @UseGuards(JwtGuard)
-@Controller('parking-slot')
+@Controller('parking-slots')
 export class ParkingSlotController {
   constructor(private parkingSlotService: ParkingSlotService) {}
+
+  @Get()
+  fetchAll(@Query() query: FetchParkingSlotDto) {
+    return this.parkingSlotService.fetchAll(query);
+  }
 
   @ApiOperation({
     summary:
