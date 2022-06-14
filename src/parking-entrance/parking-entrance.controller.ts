@@ -1,8 +1,16 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { JwtGuard } from '../auth/guard';
-import { AddParkingEntranceDto } from './dto';
+import { ParkingEntranceDto } from './dto';
 import { ParkingEntranceService } from './parking-entrance.service';
 
 @ApiBearerAuth()
@@ -18,7 +26,12 @@ export class ParkingEntranceController {
   }
 
   @Post()
-  addEntrance(@Body() body: AddParkingEntranceDto) {
+  addEntrance(@Body() body: ParkingEntranceDto) {
     return this.parkingEntranceService.addEntrance(body);
+  }
+
+  @Patch(':id')
+  updateEntrance(@Param('id') id: string, @Body() body: ParkingEntranceDto) {
+    return this.parkingEntranceService.updateEntrance(id, body);
   }
 }

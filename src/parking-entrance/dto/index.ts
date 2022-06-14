@@ -1,1 +1,1 @@
-export { AddParkingEntranceDto } from './add-parking-entrance.dto';
+export { ParkingEntranceDto } from './parking-entrance.dto';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { AddParkingEntranceDto } from './dto';
+import { ParkingEntranceDto } from './dto';
 
 @Injectable({})
 export class ParkingEntranceService {
@@ -10,8 +10,17 @@ export class ParkingEntranceService {
     return this.databaseService.parkingEntrance.findMany();
   }
 
-  addEntrance(dto: AddParkingEntranceDto) {
+  addEntrance(dto: ParkingEntranceDto) {
     return this.databaseService.parkingEntrance.create({
+      data: { ...dto },
+    });
+  }
+
+  updateEntrance(id: string, dto: ParkingEntranceDto) {
+    return this.databaseService.parkingEntrance.update({
+      where: {
+        id,
+      },
       data: { ...dto },
     });
   }
