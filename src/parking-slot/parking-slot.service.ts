@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { DatabaseService } from '../database/database.service';
-import { FetchParkingSlotDto, ParkingSlotDto } from './dto';
+import { FetchParkingSlotDto, CreateParkingSlotDto } from './dto';
 
 @Injectable({})
 export class ParkingSlotService {
@@ -26,7 +26,7 @@ export class ParkingSlotService {
     });
   }
 
-  async addParkingSlot(dto: ParkingSlotDto) {
+  async createParkingSlot(dto: CreateParkingSlotDto) {
     try {
       const positions = dto?.positions?.length ? dto.positions : [];
 

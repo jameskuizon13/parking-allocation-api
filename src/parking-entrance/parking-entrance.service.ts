@@ -10,7 +10,7 @@ export class ParkingEntranceService {
     return this.databaseService.parkingEntrance.findMany();
   }
 
-  addEntrance(dto: ParkingEntranceDto) {
+  createEntrance(dto: ParkingEntranceDto) {
     return this.databaseService.parkingEntrance.create({
       data: { ...dto },
     });

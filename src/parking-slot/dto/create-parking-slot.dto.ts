@@ -1,17 +1,16 @@
 import { Transform, TransformFnParams, Type } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 import { PositionDto } from './position.dto';
 
-export class ParkingSlotDto {
+export class CreateParkingSlotDto {
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }: TransformFnParams) => value?.trim())
   name: string;
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value?.trim())
   typeId: string;
 
   @IsOptional()

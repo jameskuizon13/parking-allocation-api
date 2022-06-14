@@ -26,8 +26,8 @@ export class ParkingEntranceController {
   }
 
   @Post()
-  addEntrance(@Body() body: ParkingEntranceDto) {
-    return this.parkingEntranceService.addEntrance(body);
+  createEntrance(@Body() body: ParkingEntranceDto) {
+    return this.parkingEntranceService.createEntrance(body);
   }
 
   @Patch(':id')
