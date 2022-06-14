@@ -5,7 +5,7 @@ export class PositionDto {
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }: TransformFnParams) => value?.trim())
-  entranceId: string;
+  parkingEntranceId: string;
 
   @IsInt()
   @IsNotEmpty()
