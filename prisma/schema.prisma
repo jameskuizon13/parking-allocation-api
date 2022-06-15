@@ -76,7 +76,7 @@ model ParkingRecord {
 model Vehicle {
   id String @id @default(uuid())
   plateNumber String @map("plate_number") @unique
-  vehicleType VehicleType @map("vehicle_type")
+  type VehicleType
 
   parkingRecords ParkingRecord[]
 
