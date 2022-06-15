@@ -11,8 +11,12 @@ const parkingSlotTypes = [
 const prisma = new PrismaClient();
 
 async function main() {
+  const parkingEntrances = [];
+  // Create parking entrances first
   for (const entrance of entrances) {
-    await prisma.parkingEntrance.create({ data: { name: entrance } });
+    parkingEntrances.push(
+      await prisma.parkingEntrance.create({ data: { name: entrance } }),
+    );
   }
 
   for (let i = 0; i < parkingSlotTypes.length; i++) {
@@ -20,8 +24,22 @@ async function main() {
       data: parkingSlotTypes[i],
     });
 
+    // Create a connnection between the parking entrance and the to be created parking slot
+    const entranceToParkingSlotsData = parkingEntrances.map(({ id }) => ({
+      parkingEntranceId: id,
+      distance: Math.round(Math.random() * 5 + 1),
+    }));
+
     await prisma.parkingSlot.create({
-      data: { name: `P${i + 1}`, parkingSlotTypeId: id },
+      data: {
+        name: `P${i + 1}`,
+        parkingSlotTypeId: id,
+        entranceToParkingSlots: {
+          createMany: {
+            data: entranceToParkingSlotsData,
+          },
+        },
+      },
     });
   }
 }
