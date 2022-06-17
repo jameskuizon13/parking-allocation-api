@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+
 import { DatabaseService } from '../database/database.service';
+import { ParkingRecordService } from '../parking-record/parking-record.service';
 import { VehicleTypeEnum } from '../vehicle/enums';
 import { VehicleService } from '../vehicle/vehicle.service';
 import {
@@ -16,6 +18,7 @@ import { ParkingTypeEnum } from './enums';
 export class ParkingSlotService {
   constructor(
     private databaseService: DatabaseService,
+    private parkingRecordService: ParkingRecordService,
     private vehicleService: VehicleService,
   ) {}
 
@@ -100,6 +103,11 @@ export class ParkingSlotService {
       },
     });
 
+    // If there is no available parking slot throw an error
+    if (parkingSlots.length === 0) {
+      throw new BadRequestException('No available parking slot');
+    }
+
     // Filtering parkingSlots that is connected to the given entrance
     const availableParkingSlots = parkingSlots
       .map((parkingSlot) => {
@@ -126,10 +134,11 @@ export class ParkingSlotService {
 
   async assignParkingSlot(dto: AssignParkingSlotDto) {
     const { entranceId, plateNumber, vehicleType } = dto;
-    // const vehicle = this.vehicleService.createVehicle({
-    //   plateNumber,
-    //   type: vehicleType,
-    // });
+
+    const vehicle = await this.vehicleService.createOrFindVehicle({
+      plateNumber,
+      type: vehicleType,
+    });
 
     const allowedParkingSlots =
       vehicleType === VehicleTypeEnum.S
@@ -141,11 +150,6 @@ export class ParkingSlotService {
       allowedParkingSlots,
       entranceId,
     );
-
-    // If there is no available parking slot throw an error
-    if (allowedParkingSlots.length === 0) {
-      throw new BadRequestException('No available parking slot');
-    }
 
     const nearestParkingSlot = availableParkingSlots.reduce(
       (nearest, parkingSlot) => {
@@ -159,17 +163,13 @@ export class ParkingSlotService {
       },
     );
 
-    return this.updateParkingSlot(nearestParkingSlot.id, { isOccupied: true });
+    await this.updateParkingSlot(nearestParkingSlot.id, { isOccupied: true });
 
-    // TODO: Create a parking record module to handle the parking record table
-    //       The parking record table is where we will record the time in and time out
+    this.parkingRecordService.createParkingRecord({
+      vehicleId: vehicle.id,
+      parkingSlotId: nearestParkingSlot.id,
+    });
 
-    // const nearestParkingSlot = filteredParkingSlots.reduce((nearestSlot) => {},
-    // null);
-    // return filteredParkingSlots;
-
-    // const nearestParkingSlot =  availableSlots.reduce((nearestSlot, currentSlot ) => {
-    //   if(nearestSlot )
-    // }, '')
+    return nearestParkingSlot;
   }
 }

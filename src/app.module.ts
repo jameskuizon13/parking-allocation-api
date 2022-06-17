@@ -7,6 +7,7 @@ import { ParkingEntranceModule } from './parking-entrance/parking-entrance.modul
 import { ParkingSlotModule } from './parking-slot/parking-slot.module';
 import { ParkingSlotTypeModule } from './parking-slot-type/parking-slot-type.module';
 import { VehicleModule } from './vehicle/vehicle.module';
+import { ParkingRecordModule } from './parking-record/parking-record.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
     ParkingSlotModule,
     ParkingSlotTypeModule,
     VehicleModule,
+    ParkingRecordModule,
   ],
 })
 export class AppModule {}

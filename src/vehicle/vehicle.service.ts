@@ -8,16 +8,18 @@ import { CreateVehicleDto } from './dto';
 export class VehicleService {
   constructor(private databaseService: DatabaseService) {}
 
-  async createVehicle(data: CreateVehicleDto) {
+  async createOrFindVehicle(data: CreateVehicleDto) {
     try {
       return await this.databaseService.vehicle.create({ data });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new BadRequestException('Duplicate vehicle');
+          return await this.databaseService.vehicle.findUnique({
+            where: { plateNumber: data.plateNumber },
+          });
         }
       } else {
-        throw error;
+        throw new BadRequestException();
       }
     }
   }
