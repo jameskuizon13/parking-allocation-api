@@ -78,7 +78,7 @@ export class ParkingSlotService {
    * @param   {ParkingTypeEnum[]}  types  Allowed parking slot type based on the vehicle size
    * @param   {string}  entranceId        The entrance id where the vehicle entered thru
    *
-   * @return  {[]}                        List of parking slots that are not occupied and
+   * @return  {ParkingSlot[]}                        List of parking slots that are not occupied and
    *                                      connected to the entrance that the vehicle entered thru
    */
   async fetchAvailableParkingSlots(
@@ -132,44 +132,59 @@ export class ParkingSlotService {
     });
   }
 
+  /**
+   * Create a vehicle object in the db, assign a parking slot to it and
+   * create a parking record on the transaction
+   *
+   * @param   {AssignParkingSlotDto}  dto  dto for assigning a parking slot
+   *
+   * @return  {ParkingRecord}                     [return description]
+   */
   async assignParkingSlot(dto: AssignParkingSlotDto) {
-    const { entranceId, plateNumber, vehicleType } = dto;
+    try {
+      const { entranceId, plateNumber, vehicleType } = dto;
 
-    const vehicle = await this.vehicleService.createOrFindVehicle({
-      plateNumber,
-      type: vehicleType,
-    });
+      const vehicle = await this.vehicleService.createOrFindVehicle({
+        plateNumber,
+        type: vehicleType,
+      });
 
-    const allowedParkingSlots =
-      vehicleType === VehicleTypeEnum.S
-        ? [ParkingTypeEnum.SP, ParkingTypeEnum.MP, ParkingTypeEnum.LP]
-        : vehicleType === VehicleTypeEnum.M
-        ? [ParkingTypeEnum.MP, ParkingTypeEnum.LP]
-        : [ParkingTypeEnum.LP];
-    const availableParkingSlots = await this.fetchAvailableParkingSlots(
-      allowedParkingSlots,
-      entranceId,
-    );
+      const allowedParkingSlots =
+        vehicleType === VehicleTypeEnum.S
+          ? [ParkingTypeEnum.SP, ParkingTypeEnum.MP, ParkingTypeEnum.LP]
+          : vehicleType === VehicleTypeEnum.M
+          ? [ParkingTypeEnum.MP, ParkingTypeEnum.LP]
+          : [ParkingTypeEnum.LP];
+      const availableParkingSlots = await this.fetchAvailableParkingSlots(
+        allowedParkingSlots,
+        entranceId,
+      );
 
-    const nearestParkingSlot = availableParkingSlots.reduce(
-      (nearest, parkingSlot) => {
-        if (
-          nearest.entranceToParkingSlots[0].distance >
-          parkingSlot.entranceToParkingSlots[0].distance
-        ) {
-          return parkingSlot;
-        }
-        return nearest;
-      },
-    );
+      const nearestParkingSlot = availableParkingSlots.reduce(
+        (nearest, parkingSlot) => {
+          if (
+            nearest.entranceToParkingSlots[0].distance >
+            parkingSlot.entranceToParkingSlots[0].distance
+          ) {
+            return parkingSlot;
+          }
+          return nearest;
+        },
+      );
 
-    await this.updateParkingSlot(nearestParkingSlot.id, { isOccupied: true });
+      // This will throw an error if there is an existing active parking record
+      const parkingRecord = await this.parkingRecordService.createParkingRecord(
+        {
+          vehicleId: vehicle.id,
+          parkingSlotId: nearestParkingSlot.id,
+        },
+      );
 
-    this.parkingRecordService.createParkingRecord({
-      vehicleId: vehicle.id,
-      parkingSlotId: nearestParkingSlot.id,
-    });
+      await this.updateParkingSlot(nearestParkingSlot.id, { isOccupied: true });
 
-    return nearestParkingSlot;
+      return parkingRecord;
+    } catch (error) {
+      throw error;
+    }
   }
 }

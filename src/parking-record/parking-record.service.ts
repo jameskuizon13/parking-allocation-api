@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,15 +17,32 @@ export class ParkingRecordService {
   ) {}
 
   /**
-   * Creates a new parking record
+   * Check if there is an existing active parking record, if there is one,
+   * throw an error, but if there is none, create one
    *
    * @param   {CreateParkingRecordDto}  dto  DTO for creating a parking record
    *
    * @return  {ParkingRecord}         The newly created Parking Record
-   * @throws  {BadRequestException}
+   * @throws  {ForbiddenException}    There is still an active parking record
    */
   async createParkingRecord(dto: CreateParkingRecordDto) {
     try {
+      // Fetch all parking records
+      const parkingRecords = await this.databaseService.parkingRecord.findMany({
+        where: {
+          vehicleId: dto.vehicleId,
+        },
+      });
+
+      // Check if parking records has an active parking
+      const activeParkingRecord = parkingRecords.find(
+        (parkingRecord) => parkingRecord.timeOut == null,
+      );
+
+      if (activeParkingRecord) {
+        throw new ForbiddenException('There is still an active parking record');
+      }
+
       return await this.databaseService.parkingRecord.create({
         data: {
           parkingSlotId: dto.parkingSlotId,
@@ -33,7 +50,7 @@ export class ParkingRecordService {
         },
       });
     } catch (error) {
-      throw new BadRequestException();
+      throw error;
     }
   }
 
