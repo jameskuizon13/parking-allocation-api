@@ -22,12 +22,12 @@ export class ParkingEntranceController {
 
   @Get()
   fetchAll() {
-    return this.parkingEntranceService.fetchAllEntrances();
+    return this.parkingEntranceService.fetchAll();
   }
 
   @Post()
-  addEntrance(@Body() body: ParkingEntranceDto) {
-    return this.parkingEntranceService.addEntrance(body);
+  createEntrance(@Body() body: ParkingEntranceDto) {
+    return this.parkingEntranceService.createEntrance(body);
   }
 
   @Patch(':id')

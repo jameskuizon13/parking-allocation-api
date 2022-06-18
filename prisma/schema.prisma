@@ -20,7 +20,7 @@ model ParkingEntrance {
 
 model ParkingSlot {
   id String @id @default(uuid())
-  name String
+  name String @unique
   isOccupied Boolean @default(false) @map("is_occupied")
 
   entranceToParkingSlots EntranceToParkingSlot[]
@@ -43,6 +43,7 @@ model EntranceToParkingSlot {
   parkingEntrance ParkingEntrance @relation(fields: [parkingEntranceId], references: [id])
   parkingEntranceId String @map("parking_entrance_id")
 
+  @@unique([parkingSlotId, parkingEntranceId])
   @@map("entrance_to_parking_slots")
 }
 
@@ -74,8 +75,8 @@ model ParkingRecord {
 
 model Vehicle {
   id String @id @default(uuid())
-  plateNumber String @map("plate_number")
-  vehicleType VehicleType @map("vehicle_type")
+  plateNumber String @map("plate_number") @unique
+  type VehicleType
 
   parkingRecords ParkingRecord[]
 
