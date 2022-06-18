@@ -1,12 +1,51 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 
 import { DatabaseService } from '../database/database.service';
-import { CreateVehicleDto } from './dto';
+import { CreateVehicleDto, FetchAllVehicleDto } from './dto';
 
 @Injectable({})
 export class VehicleService {
   constructor(private databaseService: DatabaseService) {}
+
+  /**
+   * Fetch all vehicles that passed the filters
+   *
+   * @param   {FetchAllVehicleDto}  query  DTO for filtering the search results
+   *
+   * @return  {Vehicle[]}                  List of vehicles
+   */
+  fetchAll(query: FetchAllVehicleDto) {
+    return this.databaseService.vehicle.findMany({ where: query });
+  }
+
+  /**
+   * Fetch vehicle with the given id
+   *
+   * @param   {string}  id  Unique id of vehicle
+   *
+   * @return  {Vehicle}     The fetch vehicle details
+   */
+  async fetchOne(id: string) {
+    try {
+      return await this.databaseService.vehicle.findUnique({
+        where: { id },
+        include: { parkingRecords: true },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2001') {
+          throw new NotFoundException('Vehicle not found');
+        }
+      } else {
+        throw error;
+      }
+    }
+  }
 
   /**
    * Create a vehicle
@@ -26,37 +65,6 @@ export class VehicleService {
         }
       } else {
         throw error;
-      }
-    }
-  }
-
-  /**
-   * ! Deprecated
-   * Try to create a vehicle but if vehicle is already existing
-   * return existing vehicle
-   *
-   * @param   {CreateVehicleDto}  dto  [data description]
-   *
-   * @return  {[type]}                  [return description]
-   */
-  async createOrFindVehicle(dto: CreateVehicleDto) {
-    try {
-      return await this.databaseService.vehicle.create({ data: dto });
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          const vehicle = await this.databaseService.vehicle.findFirst({
-            where: dto,
-          });
-
-          if (!vehicle) {
-            throw new BadRequestException('Vehicle registration error');
-          } else {
-            return vehicle;
-          }
-        }
-      } else {
-        throw new BadRequestException();
       }
     }
   }
