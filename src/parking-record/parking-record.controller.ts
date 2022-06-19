@@ -1,15 +1,27 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 
 import { JwtGuard } from '../auth/guard';
-import { CreateParkingRecordDto, ParkingRecordDto } from './dto';
+import {
+  CreateParkingRecordDto,
+  ManualUpdateParkingRecordDto,
+  ParkingRecordDto,
+} from './dto';
 import { ParkingRecordService } from './parking-record.service';
 
 @ApiBearerAuth()
@@ -34,5 +46,22 @@ export class ParkingRecordController {
     @Body() body: CreateParkingRecordDto,
   ): Promise<ParkingRecordDto> {
     return this.parkingRecordService.createParkingRecord(body);
+  }
+
+  @ApiOperation({
+    summary:
+      'Manual setting of unparking time. For demostaration or testing purposes',
+  })
+  @ApiResponse({
+    description: 'Unpark car by manually inputting its parking duration',
+  })
+  @ApiNotFoundResponse({ description: 'Parking record not found' })
+  @ApiBadRequestResponse({ description: 'Vehicle has already unparked' })
+  @Patch(':id')
+  manualUpdateParkingRecord(
+    @Param('id') id: string,
+    @Body() body: ManualUpdateParkingRecordDto,
+  ) {
+    return this.parkingRecordService.manualUnpark(id, body);
   }
 }

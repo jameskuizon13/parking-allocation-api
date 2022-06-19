@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -9,7 +10,7 @@ import { DatabaseService } from '../database/database.service';
 import { ParkingSlotService } from '../parking-slot/parking-slot.service';
 import { VehicleTypeEnum } from '../vehicle/enums';
 import { VehicleService } from '../vehicle/vehicle.service';
-import { CreateParkingRecordDto } from './dto';
+import { CreateParkingRecordDto, ManualUpdateParkingRecordDto } from './dto';
 
 @Injectable({})
 export class ParkingRecordService {
@@ -19,6 +20,36 @@ export class ParkingRecordService {
     private parkingSlotService: ParkingSlotService,
     private vehicleService: VehicleService,
   ) {}
+
+  /**
+   * Fetch existing parking record if not, will throw an error
+   *
+   * @param   {string}  id  Unique id of parking record
+   *
+   * @return  {ParkingRecord}      Fetched parking record
+   * @throws  {NotFoundException}  Parking record not found
+   */
+  async fetchParkingRecord(id: string) {
+    try {
+      const parkingRecord = await this.databaseService.parkingRecord.findUnique(
+        {
+          where: { id },
+          include: {
+            parkingSlot: { include: { parkingSlotType: true } },
+            parkingEntrance: true,
+          },
+        },
+      );
+
+      if (!parkingRecord) {
+        throw new NotFoundException('Parking record not found');
+      }
+
+      return parkingRecord;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   /**
    * Creates a parking object, if we can create or find the vehicle, and assign
@@ -62,6 +93,7 @@ export class ParkingRecordService {
         data: {
           parkingSlotId,
           vehicleId,
+          parkingEntranceId: entranceId,
         },
         select: {
           id: true,
@@ -102,33 +134,6 @@ export class ParkingRecordService {
   }
 
   /**
-   * Fetch existing parking record if not, will throw an error
-   *
-   * @param   {string}  id  Unique id of parking record
-   *
-   * @return  {ParkingRecord}      Fetched parking record
-   * @throws  {NotFoundException}  Parking record not found
-   */
-  async fetchParkingRecord(id: string) {
-    try {
-      const parkingRecord = await this.databaseService.parkingRecord.findUnique(
-        {
-          where: { id },
-          include: { parkingSlot: { include: { parkingSlotType: true } } },
-        },
-      );
-
-      if (!parkingRecord) {
-        throw new NotFoundException('Parking record not found');
-      }
-
-      return parkingRecord;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
    * Computing the parking fee based on the difference from the time the vehicle entered the parking complex
    * and the time it unpark
    *
@@ -149,23 +154,19 @@ export class ParkingRecordService {
     // 1000 milliseconds is 1 second, 60 seconds is 1 minute and 60 minutes is 1 hr
     // and rounding it up to the nearest largest integer
     const totalHours = Math.ceil(timeDifference / (1000 * 60 * 60));
-    const flatRateHours = this.configService.get('FLAT_RATE_HOURS');
+    const flatRateHours = parseInt(this.configService.get('FLAT_RATE_HOURS'));
+    const flatRate = parseInt(this.configService.get('FLAT_RATE'));
+    const overnightFee = parseInt(this.configService.get('OVERNIGHT_FEE'));
 
     if (totalHours > 24) {
       const days = totalHours / 24;
       const remainingHours = Math.ceil(totalHours % 24);
 
-      return (
-        days * this.configService.get('OVERNIGHT_FEE') +
-        remainingHours * parkingSlotPrice
-      );
+      return days * overnightFee + remainingHours * parkingSlotPrice;
     } else if (totalHours > flatRateHours) {
-      return (
-        (totalHours - flatRateHours) * parkingSlotPrice +
-        this.configService.get('FLAT_RATE')
-      );
+      return (totalHours - flatRateHours) * parkingSlotPrice + flatRate;
     } else {
-      return this.configService.get('FLAT_RATE');
+      return flatRate;
     }
   }
 
@@ -180,18 +181,85 @@ export class ParkingRecordService {
   async endParkingRecord(id: string) {
     const {
       timeIn,
+      timeOut,
       parkingSlot: {
+        id: parkingSlotId,
         parkingSlotType: { price },
       },
     } = await this.fetchParkingRecord(id);
 
-    const timeOut = new Date();
+    if (timeOut) {
+      throw new BadRequestException('Vehicle has already unparked');
+    }
+
+    const newTimeOut = new Date();
     // price is of type Decimal from Decimal.js
-    const amountDue = this.computeParkingFee(timeOut, timeIn, price.toNumber());
+    const amountDue = this.computeParkingFee(
+      newTimeOut,
+      timeIn,
+      price.toNumber(),
+    );
+
+    await this.parkingSlotService.updateParkingSlot(parkingSlotId, {
+      isOccupied: false,
+    });
 
     return this.databaseService.parkingRecord.update({
       where: { id },
-      data: { timeOut, amountDue },
+      data: { timeOut: newTimeOut, amountDue },
     });
+  }
+
+  /**
+   * Used when you want to manually specify the parking duration
+   *
+   * @param   {string}  id  Unique id of the parking record
+   * @param   {ManualUpdateParkingRecordDto} dto DTO for manually specifying the
+   *                                             parking duration
+   *
+   * @return  {ParkingRecord}      The updated parking record with the amount due
+   *                               and timeOut
+   */
+  async manualUnpark(id: string, dto: ManualUpdateParkingRecordDto) {
+    try {
+      const {
+        timeIn,
+        timeOut,
+        parkingSlot: {
+          id: parkingSlotId,
+          parkingSlotType: { price },
+        },
+      } = await this.fetchParkingRecord(id);
+
+      if (timeOut) {
+        throw new BadRequestException('Vehicle has already unparked');
+      }
+
+      // Converting minutes and hours to milliseconds
+      // 1000 milliseconds is equal 1 second
+      // 60 seconds is equal to 1 minute
+      // 60 minutes is equal to 1 hour
+      const minutes = dto?.minutes ? dto.minutes * 60 * 1000 : 0;
+      const hours = dto?.hours ? dto.hours * 60 * 60 * 1000 : 0;
+
+      const newTimeOut = new Date(timeIn.getTime() + minutes + hours);
+      // price is of type Decimal from Decimal.js
+      const amountDue = this.computeParkingFee(
+        newTimeOut,
+        timeIn,
+        price.toNumber(),
+      );
+
+      await this.parkingSlotService.updateParkingSlot(parkingSlotId, {
+        isOccupied: false,
+      });
+
+      return this.databaseService.parkingRecord.update({
+        where: { id },
+        data: { timeOut: newTimeOut, amountDue },
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 }
