@@ -34,7 +34,14 @@ export class ParkingSlotService {
       include: {
         parkingSlotType: true,
         parkingRecords: true,
-        entranceToParkingSlots: true,
+        entranceToParkingSlots: {
+          select: {
+            distance: true,
+            parkingEntrance: {
+              select: { name: true },
+            },
+          },
+        },
       },
     });
   }
