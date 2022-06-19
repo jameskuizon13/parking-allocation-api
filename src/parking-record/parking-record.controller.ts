@@ -54,7 +54,7 @@ export class ParkingRecordController {
     return this.parkingRecordService.fetchParkingRecord(id);
   }
 
-  @ApiOperation({ summary: 'Assign a parking slot to a user' })
+  @ApiOperation({ summary: 'Assign a parking slot to a vehicle' })
   @ApiCreatedResponse({
     description: 'Created parking record and additional needed details',
     type: ParkingRecordDto,
