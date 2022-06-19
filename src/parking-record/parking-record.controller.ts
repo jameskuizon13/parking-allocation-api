@@ -48,17 +48,24 @@ export class ParkingRecordController {
     return this.parkingRecordService.createParkingRecord(body);
   }
 
+  @ApiOperation({ summary: 'Unpark vehicle' })
+  @ApiResponse({ description: 'The parking record' })
+  @ApiNotFoundResponse({ description: 'Parking record not found' })
+  @ApiBadRequestResponse({ description: 'Vehicle has already unparked' })
+  @Patch(':id')
+  unpark(@Param('id') id: string) {
+    return this.parkingRecordService.unpark(id);
+  }
+
   @ApiOperation({
     summary:
       'Manual setting of unparking time. For demostaration or testing purposes',
   })
-  @ApiResponse({
-    description: 'Unpark car by manually inputting its parking duration',
-  })
+  @ApiResponse({ description: 'The parking record' })
   @ApiNotFoundResponse({ description: 'Parking record not found' })
   @ApiBadRequestResponse({ description: 'Vehicle has already unparked' })
-  @Patch(':id')
-  manualUpdateParkingRecord(
+  @Patch(':id/manual')
+  manualUnparkParkingRecord(
     @Param('id') id: string,
     @Body() body: ManualUpdateParkingRecordDto,
   ) {

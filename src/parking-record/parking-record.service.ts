@@ -178,7 +178,7 @@ export class ParkingRecordService {
    * @return  {ParkingRecord}      The updated parking record with the amount due
    *                               and timeOut
    */
-  async endParkingRecord(id: string) {
+  async unpark(id: string) {
     const {
       timeIn,
       timeOut,
