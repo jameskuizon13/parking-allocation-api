@@ -31,6 +31,11 @@ export class ParkingSlotService {
      * */
     return this.databaseService.parkingSlot.findMany({
       where: query,
+      include: {
+        parkingSlotType: true,
+        parkingRecords: true,
+        entranceToParkingSlots: true,
+      },
     });
   }
 
