@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -31,9 +32,13 @@ import { ParkingRecordService } from './parking-record.service';
 export class ParkingRecordController {
   constructor(private parkingRecordService: ParkingRecordService) {}
 
-  /**
-   * Creates a parking record
-   */
+  @ApiOperation({ summary: 'Fetch a particular parking record' })
+  @ApiNotFoundResponse({ description: 'Parking record not found' })
+  @Get(':id')
+  fetchParkingRecord(@Param('id') id: string) {
+    return this.parkingRecordService.fetchParkingRecord(id);
+  }
+
   @ApiOperation({ summary: 'Assign a parking slot to a user' })
   @ApiCreatedResponse({
     description: 'Created parking record and additional needed details',

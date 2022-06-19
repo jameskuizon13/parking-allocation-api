@@ -276,6 +276,7 @@ export class ParkingRecordService {
     return this.databaseService.parkingRecord.update({
       where: { id },
       data: { timeOut: newTimeOut, ...data },
+      include: { parkingSlot: true, parkingEntrance: true },
     });
   }
 
@@ -330,6 +331,7 @@ export class ParkingRecordService {
       return this.databaseService.parkingRecord.update({
         where: { id },
         data: { timeOut: newTimeOut, ...data },
+        include: { parkingSlot: true, parkingEntrance: true },
       });
     } catch (error) {
       throw error;
