@@ -14,6 +14,10 @@ import { ParkingSlotService } from './parking-slot.service';
 export class ParkingSlotController {
   constructor(private parkingSlotService: ParkingSlotService) {}
 
+  @ApiOperation({
+    summary:
+      'Fetch all parking slots. You can also add filters to its search results.',
+  })
   @Get()
   fetchAll(@Query() query: FetchParkingSlotDto) {
     return this.parkingSlotService.fetchAll(query);

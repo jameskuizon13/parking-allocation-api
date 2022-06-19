@@ -10,7 +10,11 @@ import { DatabaseService } from '../database/database.service';
 import { ParkingSlotService } from '../parking-slot/parking-slot.service';
 import { VehicleTypeEnum } from '../vehicle/enums';
 import { VehicleService } from '../vehicle/vehicle.service';
-import { CreateParkingRecordDto, ManualUpdateParkingRecordDto } from './dto';
+import {
+  CreateParkingRecordDto,
+  FetchAllParkingRecordDto,
+  ManualUpdateParkingRecordDto,
+} from './dto';
 
 @Injectable({})
 export class ParkingRecordService {
@@ -20,6 +24,49 @@ export class ParkingRecordService {
     private parkingSlotService: ParkingSlotService,
     private vehicleService: VehicleService,
   ) {}
+
+  /**
+   * Fetch all parking records
+   *
+   * @param   {FetchAllParkingRecordDto}  query  DTO for filtering the list of parking records
+   *
+   * @return  {ParkingRecord}                    The list of parking records
+   */
+  fetchAll(query: FetchAllParkingRecordDto) {
+    const whereStatement = {
+      isContinuous: {
+        equals: query.isContinuous,
+      },
+      vehicle: {
+        plateNumber: { contains: query.keyword },
+        type: { equals: query.vehicleType },
+      },
+      parkingSlot: {
+        name: { contains: query.keyword },
+        parkingSlotType: {
+          type: query.parkingType,
+        },
+      },
+      parkingEntrance: {
+        name: { contains: query.keyword },
+      },
+    };
+
+    if (query.isActive) {
+      whereStatement['timeOut'] = { equals: null };
+    } else if (query?.isActive !== undefined && !query.isActive) {
+      whereStatement['timeOut'] = { not: null };
+    }
+
+    return this.databaseService.parkingRecord.findMany({
+      where: whereStatement,
+      include: {
+        parkingEntrance: true,
+        parkingSlot: { include: { parkingSlotType: true } },
+        entranceToParkingSlot: true,
+      },
+    });
+  }
 
   /**
    * Fetch existing parking record if not, will throw an error
@@ -111,7 +158,7 @@ export class ParkingRecordService {
 
       const vehicle = await this.vehicleService.fetchOne(vehicleId);
 
-      const { id: parkingSlotId } =
+      const { id: parkingSlotId, entranceToParkingSlots } =
         await this.parkingSlotService.fetchNearestAvailableParkingSlot(
           entranceId,
           vehicle.type as VehicleTypeEnum,
@@ -141,6 +188,7 @@ export class ParkingRecordService {
           parkingSlotId,
           vehicleId,
           parkingEntranceId: entranceId,
+          entranceToParkingSlotId: entranceToParkingSlots[0].id,
           ...continuousRateData,
         },
         select: {
@@ -157,15 +205,16 @@ export class ParkingRecordService {
                   type: true,
                 },
               },
-              entranceToParkingSlots: {
-                select: {
-                  distance: true,
-                  parkingEntrance: { select: { name: true } },
-                },
-                where: {
-                  parkingEntranceId: entranceId,
-                },
-              },
+            },
+          },
+          entranceToParkingSlot: {
+            select: {
+              distance: true,
+            },
+          },
+          parkingEntrance: {
+            select: {
+              name: true,
             },
           },
         },
