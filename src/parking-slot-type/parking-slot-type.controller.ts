@@ -1,5 +1,5 @@
 import { UseGuards, Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { JwtGuard } from '../auth/guard';
 import { ParkingSlotTypeService } from './parking-slot-type.service';
@@ -11,6 +11,7 @@ import { ParkingSlotTypeService } from './parking-slot-type.service';
 export class ParkingSlotTypeController {
   constructor(private parkingSlotTypeService: ParkingSlotTypeService) {}
 
+  @ApiOperation({ summary: 'Fetch list of parking slot types' })
   @Get()
   fetchAll() {
     return this.parkingSlotTypeService.fetchAll();
