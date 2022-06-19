@@ -19,8 +19,11 @@ export class ParkingRecordDto {
       price: number | Decimal;
       type: ParkingTypeEnum | ParkingType;
     };
-    // Using any for this for now as there is a circular dependency issue that
-    // I still haven't figured out how to fix
-    entranceToParkingSlots?: any;
+  };
+  entranceToParkingSlot: {
+    distance: number;
+  };
+  parkingEntrance: {
+    name: string;
   };
 }

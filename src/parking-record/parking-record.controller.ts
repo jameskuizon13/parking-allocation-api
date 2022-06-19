@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -12,6 +13,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -20,6 +22,7 @@ import {
 import { JwtGuard } from '../auth/guard';
 import {
   CreateParkingRecordDto,
+  FetchAllParkingRecordDto,
   ManualUpdateParkingRecordDto,
   ParkingRecordDto,
 } from './dto';
@@ -31,6 +34,18 @@ import { ParkingRecordService } from './parking-record.service';
 @Controller('parking-records')
 export class ParkingRecordController {
   constructor(private parkingRecordService: ParkingRecordService) {}
+
+  @ApiOperation({
+    summary:
+      'Fetch all parking records. You can also add filters to its search results',
+  })
+  @ApiOkResponse({ description: 'The list of vehicles' })
+  @Get()
+  fetchAll(
+    @Query() query: FetchAllParkingRecordDto,
+  ): Promise<ParkingRecordDto[]> {
+    return this.parkingRecordService.fetchAll(query);
+  }
 
   @ApiOperation({ summary: 'Fetch a particular parking record' })
   @ApiNotFoundResponse({ description: 'Parking record not found' })
