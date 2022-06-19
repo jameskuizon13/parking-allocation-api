@@ -20,7 +20,10 @@ export class VehicleService {
    * @return  {Vehicle[]}                  List of vehicles
    */
   fetchAll(query: FetchAllVehicleDto) {
-    return this.databaseService.vehicle.findMany({ where: query });
+    return this.databaseService.vehicle.findMany({
+      where: query,
+      include: { parkingRecords: true },
+    });
   }
 
   /**

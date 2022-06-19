@@ -64,6 +64,9 @@ model ParkingRecord {
   timeIn DateTime @default(now()) @map("time_in")
   timeOut DateTime? @map("time_out")
   amountDue Decimal @default(0) @map("amount_due")
+  duration Int @default(0)
+  isContinuous Boolean @default(false) @map("is_continuous")
+  remainingContinuousHours Int @default(0) @map("remaining_continuous_hours")
 
   parkingEntrance ParkingEntrance @relation(fields: [parkingEntranceId], references: [id])
   parkingEntranceId String @map("parking_entrance_id")

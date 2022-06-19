@@ -120,27 +120,31 @@ export class ParkingSlotService {
     entranceId: string,
     vehicleType: VehicleTypeEnum,
   ) {
-    const allowedParkingSlots =
-      vehicleType === VehicleTypeEnum.S
-        ? [ParkingTypeEnum.SP, ParkingTypeEnum.MP, ParkingTypeEnum.LP]
-        : vehicleType === VehicleTypeEnum.M
-        ? [ParkingTypeEnum.MP, ParkingTypeEnum.LP]
-        : [ParkingTypeEnum.LP];
+    try {
+      const allowedParkingSlots =
+        vehicleType === VehicleTypeEnum.S
+          ? [ParkingTypeEnum.SP, ParkingTypeEnum.MP, ParkingTypeEnum.LP]
+          : vehicleType === VehicleTypeEnum.M
+          ? [ParkingTypeEnum.MP, ParkingTypeEnum.LP]
+          : [ParkingTypeEnum.LP];
 
-    const availableParkingSlots = await this.fetchAvailableParkingSlots(
-      allowedParkingSlots,
-      entranceId,
-    );
+      const availableParkingSlots = await this.fetchAvailableParkingSlots(
+        allowedParkingSlots,
+        entranceId,
+      );
 
-    return availableParkingSlots.reduce((nearest, parkingSlot) => {
-      if (
-        nearest.entranceToParkingSlots[0].distance >
-        parkingSlot.entranceToParkingSlots[0].distance
-      ) {
-        return parkingSlot;
-      }
-      return nearest;
-    });
+      return availableParkingSlots.reduce((nearest, parkingSlot) => {
+        if (
+          nearest.entranceToParkingSlots[0].distance >
+          parkingSlot.entranceToParkingSlots[0].distance
+        ) {
+          return parkingSlot;
+        }
+        return nearest;
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   updateParkingSlot(id: string, dto: UpdateParkingSlotDto) {
