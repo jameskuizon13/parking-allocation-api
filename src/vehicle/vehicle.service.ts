@@ -29,21 +29,22 @@ export class VehicleService {
    * @param   {string}  id  Unique id of vehicle
    *
    * @return  {Vehicle}     The fetch vehicle details
+   * @throws {NotFoundException}  Vehicle not found
    */
   async fetchOne(id: string) {
     try {
-      return await this.databaseService.vehicle.findUnique({
+      const vehicle = await this.databaseService.vehicle.findUnique({
         where: { id },
         include: { parkingRecords: true },
       });
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === 'P2001') {
-          throw new NotFoundException('Vehicle not found');
-        }
-      } else {
-        throw error;
+
+      if (!vehicle) {
+        throw new NotFoundException('Vehicle not found');
       }
+
+      return vehicle;
+    } catch (error) {
+      throw error;
     }
   }
 

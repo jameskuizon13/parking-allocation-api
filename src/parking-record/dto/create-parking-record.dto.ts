@@ -3,7 +3,7 @@ import { IsNotEmpty, IsUUID } from 'class-validator';
 export class CreateParkingRecordDto {
   @IsUUID()
   @IsNotEmpty()
-  parkingSlotId: string;
+  entranceId: string;
 
   @IsUUID()
   @IsNotEmpty()
