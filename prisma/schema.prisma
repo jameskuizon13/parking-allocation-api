@@ -13,7 +13,8 @@ datasource db {
 model ParkingEntrance {
   id String @id @default(uuid())
   name String @unique
-  entranceToSlot EntranceToParkingSlot[]
+  entranceToParkingSlots EntranceToParkingSlot[]
+  parkingRecords ParkingRecord[]
 
   @@map("parking_entrances")
 }
@@ -63,6 +64,9 @@ model ParkingRecord {
   timeIn DateTime @default(now()) @map("time_in")
   timeOut DateTime? @map("time_out")
   amountDue Decimal @default(0) @map("amount_due")
+
+  parkingEntrance ParkingEntrance @relation(fields: [parkingEntranceId], references: [id])
+  parkingEntranceId String @map("parking_entrance_id")
 
   parkingSlot ParkingSlot @relation(fields: [parkingSlotId], references: [id])
   parkingSlotId String @map("parking_slot_id")
