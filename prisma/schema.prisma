@@ -44,6 +44,8 @@ model EntranceToParkingSlot {
   parkingEntrance ParkingEntrance @relation(fields: [parkingEntranceId], references: [id])
   parkingEntranceId String @map("parking_entrance_id")
 
+  parkingRecords ParkingRecord[]
+
   @@unique([parkingSlotId, parkingEntranceId])
   @@map("entrance_to_parking_slots")
 }
@@ -73,6 +75,9 @@ model ParkingRecord {
 
   parkingSlot ParkingSlot @relation(fields: [parkingSlotId], references: [id])
   parkingSlotId String @map("parking_slot_id")
+
+  entranceToParkingSlot EntranceToParkingSlot @relation(fields: [entranceToParkingSlotId], references: [id])
+  entranceToParkingSlotId String @map("entrance_to_parking_slot_id")
 
   vehicle Vehicle @relation(fields: [vehicleId], references: [id])
   vehicleId String @map("vehicle_id")
