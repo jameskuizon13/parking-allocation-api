@@ -3,11 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { JwtGuard } from '../auth/guard';
 
-import {
-  AssignParkingSlotDto,
-  FetchParkingSlotDto,
-  CreateParkingSlotDto,
-} from './dto';
+import { FetchParkingSlotDto, CreateParkingSlotDto } from './dto';
 
 import { ParkingSlotService } from './parking-slot.service';
 
@@ -30,13 +26,5 @@ export class ParkingSlotController {
   @Post()
   createParkingSlot(@Body() body: CreateParkingSlotDto) {
     return this.parkingSlotService.createParkingSlot(body);
-  }
-
-  @ApiOperation({
-    summary: 'Assign a parking slot',
-  })
-  @Post('/assignment')
-  assignParkingSlot(@Body() body: AssignParkingSlotDto) {
-    return this.parkingSlotService.assignParkingSlot(body);
   }
 }

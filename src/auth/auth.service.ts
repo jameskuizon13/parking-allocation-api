@@ -1,7 +1,7 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -50,13 +50,13 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new ForbiddenException('Incorrect credentials');
+        throw new UnauthorizedException('Incorrect credentials');
       }
 
       if (await argon.verify(user.hash, dto.password)) {
         return this.signToken(user.id, user.email);
       } else {
-        throw new ForbiddenException('Incorrect credentials');
+        throw new UnauthorizedException('Incorrect credentials');
       }
     } catch (error) {
       throw error;

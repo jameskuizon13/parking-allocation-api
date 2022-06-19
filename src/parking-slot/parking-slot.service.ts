@@ -2,11 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 
 import { DatabaseService } from '../database/database.service';
-import { ParkingRecordService } from '../parking-record/parking-record.service';
 import { VehicleTypeEnum } from '../vehicle/enums';
-import { VehicleService } from '../vehicle/vehicle.service';
 import {
-  AssignParkingSlotDto,
   FetchParkingSlotDto,
   CreateParkingSlotDto,
   UpdateParkingSlotDto,
@@ -16,11 +13,7 @@ import { ParkingTypeEnum } from './enums';
 
 @Injectable({})
 export class ParkingSlotService {
-  constructor(
-    private databaseService: DatabaseService,
-    private parkingRecordService: ParkingRecordService,
-    private vehicleService: VehicleService,
-  ) {}
+  constructor(private databaseService: DatabaseService) {}
 
   fetchAll(query: FetchParkingSlotDto) {
     if (query.parkingType) {
@@ -123,6 +116,37 @@ export class ParkingSlotService {
     return availableParkingSlots;
   }
 
+  async fetchNearestAvailableParkingSlot(
+    entranceId: string,
+    vehicleType: VehicleTypeEnum,
+  ) {
+    try {
+      const allowedParkingSlots =
+        vehicleType === VehicleTypeEnum.S
+          ? [ParkingTypeEnum.SP, ParkingTypeEnum.MP, ParkingTypeEnum.LP]
+          : vehicleType === VehicleTypeEnum.M
+          ? [ParkingTypeEnum.MP, ParkingTypeEnum.LP]
+          : [ParkingTypeEnum.LP];
+
+      const availableParkingSlots = await this.fetchAvailableParkingSlots(
+        allowedParkingSlots,
+        entranceId,
+      );
+
+      return availableParkingSlots.reduce((nearest, parkingSlot) => {
+        if (
+          nearest.entranceToParkingSlots[0].distance >
+          parkingSlot.entranceToParkingSlots[0].distance
+        ) {
+          return parkingSlot;
+        }
+        return nearest;
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   updateParkingSlot(id: string, dto: UpdateParkingSlotDto) {
     return this.databaseService.parkingSlot.update({
       where: {
@@ -130,61 +154,5 @@ export class ParkingSlotService {
       },
       data: { ...dto },
     });
-  }
-
-  /**
-   * Create a vehicle object in the db, assign a parking slot to it and
-   * create a parking record on the transaction
-   *
-   * @param   {AssignParkingSlotDto}  dto  dto for assigning a parking slot
-   *
-   * @return  {ParkingRecord}                     [return description]
-   */
-  async assignParkingSlot(dto: AssignParkingSlotDto) {
-    try {
-      const { entranceId, plateNumber, vehicleType } = dto;
-
-      const vehicle = await this.vehicleService.createOrFindVehicle({
-        plateNumber,
-        type: vehicleType,
-      });
-
-      const allowedParkingSlots =
-        vehicleType === VehicleTypeEnum.S
-          ? [ParkingTypeEnum.SP, ParkingTypeEnum.MP, ParkingTypeEnum.LP]
-          : vehicleType === VehicleTypeEnum.M
-          ? [ParkingTypeEnum.MP, ParkingTypeEnum.LP]
-          : [ParkingTypeEnum.LP];
-      const availableParkingSlots = await this.fetchAvailableParkingSlots(
-        allowedParkingSlots,
-        entranceId,
-      );
-
-      const nearestParkingSlot = availableParkingSlots.reduce(
-        (nearest, parkingSlot) => {
-          if (
-            nearest.entranceToParkingSlots[0].distance >
-            parkingSlot.entranceToParkingSlots[0].distance
-          ) {
-            return parkingSlot;
-          }
-          return nearest;
-        },
-      );
-
-      // This will throw an error if there is an existing active parking record
-      const parkingRecord = await this.parkingRecordService.createParkingRecord(
-        {
-          vehicleId: vehicle.id,
-          parkingSlotId: nearestParkingSlot.id,
-        },
-      );
-
-      await this.updateParkingSlot(nearestParkingSlot.id, { isOccupied: true });
-
-      return parkingRecord;
-    } catch (error) {
-      throw error;
-    }
   }
 }

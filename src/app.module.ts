@@ -13,12 +13,12 @@ import { ParkingRecordModule } from './parking-record/parking-record.module';
   imports: [
     AuthModule,
     DatabaseModule,
-    UserModule,
     ParkingEntranceModule,
+    ParkingRecordModule,
     ParkingSlotModule,
     ParkingSlotTypeModule,
+    UserModule,
     VehicleModule,
-    ParkingRecordModule,
   ],
 })
 export class AppModule {}
