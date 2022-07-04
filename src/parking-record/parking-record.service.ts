@@ -262,7 +262,7 @@ export class ParkingRecordService {
     const overnightFee = parseInt(this.configService.get('OVERNIGHT_FEE'));
 
     if (totalHours > 24) {
-      const days = totalHours / 24;
+      const days = Math.floor(totalHours / 24);
       const remainingHours = Math.ceil(totalHours % 24);
 
       return {
